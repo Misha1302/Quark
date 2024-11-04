@@ -20,7 +20,7 @@ public class Example1
             new Op(OpType.PushConst, [VmValue.New(2.0, Number)]),
             new Op(OpType.MathOrLogicOp, [VmValue.New(MathLogicOp.Pow, NativeI64)]),
 
-            new Op(OpType.CallSharp, [VmValue.New(Buildin.PrintLn)]),
+            new Op(OpType.CallSharp, [..SharpCall.New(BuiltInFunctions.PrintLn)]),
 
             new Op(OpType.Ret, []),
         ];

@@ -19,5 +19,5 @@ public class MyStack<T>
         return r;
     }
 
-    public T Get(int ind) => _list[ind];
+    public T Get(Index ind) => _list[ind];
 }

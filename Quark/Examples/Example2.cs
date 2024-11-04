@@ -31,19 +31,17 @@ public class Example2
             new Op(OpType.SetLocal, [i]),
 
             new Op(OpType.LoadLocal, [i]),
-            new Op(OpType.CallSharp, [VmValue.New(Buildin.Print)]),
-            new Op(OpType.Drop, []),
+            new Op(OpType.CallSharp, [..SharpCall.New(BuiltInFunctions.Print)]),
 
             new Op(OpType.PushConst, [VmValue.NewRef(" ", Str)]),
-            new Op(OpType.CallSharp, [VmValue.New(Buildin.Print)]),
+            new Op(OpType.CallSharp, [..SharpCall.New(BuiltInFunctions.Print)]),
 
-            new Op(OpType.Drop, []),
             new Op(OpType.BrOp, [BranchModes.Basic, startLabel]),
 
             new Op(OpType.Label, [VmValue.NewRef("end", Str), endLabel]),
-            
+
             new Op(OpType.PushConst, [VmValue.NewRef("\n", Str)]),
-            new Op(OpType.CallSharp, [VmValue.New(Buildin.Print)]),
+            new Op(OpType.CallSharp, [..SharpCall.New(BuiltInFunctions.Print)]),
             new Op(OpType.PushConst, [VmValue.NilValue]),
             new Op(OpType.Ret, []),
         ];

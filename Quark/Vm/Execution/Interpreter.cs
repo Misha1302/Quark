@@ -28,13 +28,43 @@ public class Interpreter
         if (op.Type == OpType.PushConst) Stack.Push(op.Args[0]);
         else if (op.Type == OpType.MathOrLogicOp) DoMathOrLogic(op.Args[0].Get<MathLogicOp>());
         else if (op.Type == OpType.Ret) Frames.Pop();
-        else if (op.Type == OpType.CallSharp) CallSharp(op.Args[0].Get<nint>());
+        else if (op.Type == OpType.CallSharp)
+            CallSharp(op.Args[0].Get<nint>(), op.Args[1].Get<long>(), op.Args[2].IsTrue());
         else if (op.Type == OpType.SetLocal) Frames.Peek().Variables[(int)op.Args[0].Get<long>()].Value = Stack.Pop();
         else if (op.Type == OpType.LoadLocal) Stack.Push(Frames.Peek().Variables[(int)op.Args[0].Get<long>()].Value);
         else if (op.Type == OpType.BrOp) DoBranch(op.Args[0].Get<BranchMode>(), op.Args[1].Get<long>());
         else if (op.Type == OpType.Label) DoNothing();
         else if (op.Type == OpType.Drop) Stack.Pop();
         else Throw.InvalidOpEx();
+    }
+
+    private unsafe void CallSharp(nint ptr, long argsCount, bool returnsValue)
+    {
+        if (!returnsValue)
+        {
+            if (argsCount == 0)
+                ((delegate*<void>)ptr)();
+            else if (argsCount == 1)
+                ((delegate*<VmValue, void>)ptr)(Stack.Get(^1));
+            else if (argsCount == 2)
+                ((delegate*<VmValue, VmValue, void>)ptr)(Stack.Get(^1), Stack.Get(^2));
+            else if (argsCount == 3)
+                ((delegate*<VmValue, VmValue, VmValue, void>)ptr)(Stack.Get(^1), Stack.Get(^2), Stack.Get(^3));
+            else Throw.InvalidOpEx();
+        }
+        else
+        {
+            var result = argsCount switch
+            {
+                0 => ((delegate*<VmValue>)ptr)(),
+                1 => ((delegate*<VmValue, VmValue>)ptr)(Stack.Get(^1)),
+                2 => ((delegate*<VmValue, VmValue, VmValue>)ptr)(Stack.Get(^1), Stack.Get(^2)),
+                3 => ((delegate*<VmValue, VmValue, VmValue, VmValue>)ptr)(Stack.Get(^1), Stack.Get(^2), Stack.Get(^3)),
+                _ => Throw.InvalidOpEx<VmValue>(),
+            };
+            Stack.Push(result);
+        }
+
     }
 
     private void DoNothing()
@@ -57,12 +87,6 @@ public class Interpreter
         var isFalse = branchMode == BranchMode.IfFalse && value.IsFalse();
         if (isTrue || isFalse)
             vmFrame.Ip = vmFrame.Labels[(int)labelIndex].Ip;
-    }
-
-    private unsafe void CallSharp(nint ptr)
-    {
-        var func = (delegate*<MyStack<VmValue>, VmValue>)ptr;
-        Stack.Push(func(Stack));
     }
 
     private void DoMathOrLogic(MathLogicOp op)
