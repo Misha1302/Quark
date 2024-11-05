@@ -20,4 +20,10 @@ public class MyStack<T>
     }
 
     public T Get(Index ind) => _list[ind];
+
+    public void DropMany(long argsCount)
+    {
+        // TODO: optimize
+        for (var i = 0; i < argsCount; i++) Pop();
+    }
 }

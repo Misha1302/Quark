@@ -1,10 +1,10 @@
 using System.Globalization;
 
-namespace Quark.Vm.DataStructures.VmValue;
+namespace Quark.Vm.DataStructures.VmValues;
 
-public static class VmValueExt
+public static class VmValueExtensions
 {
-    public static string ToStringExt(this VmValue value)
+    public static string ToStringExtension(this VmValue value)
     {
         return value.Type switch
         {
@@ -17,7 +17,7 @@ public static class VmValueExt
             SharpFunction => value.Get<nint>().ToString("X"),
             NativeI64 => $"n_{value.Get<long>()}",
             Any => $"any: {value.Get<long>()}",
-            _ => Throw.InvalidOpEx<string>()
+            _ => Throw.InvalidOpEx<string>(),
         };
     }
 }

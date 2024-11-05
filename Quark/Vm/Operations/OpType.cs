@@ -11,5 +11,5 @@ public enum OpType
     CallFunc,
     Ret,
     Label,
-    Drop
+    Drop,
 }

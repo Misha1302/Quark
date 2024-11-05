@@ -2,20 +2,20 @@ using Quark.Vm.Operations;
 
 namespace Quark.Vm.DataStructures;
 
-public record VmFunction(List<Op> Ops, string Name, List<VmVariable> Variables, List<Label> Labels)
+public record VmFunction(List<Operation> Ops, string Name, List<VmVariable> Variables, List<Label> Labels)
 {
-    public VmFunction(List<Op> Ops, string Name, List<VmVariable> Variables)
+    public VmFunction(List<Operation> Ops, string Name, List<VmVariable> Variables)
         : this(Ops, Name, Variables, CalculateLabels(Ops))
     {
     }
 
-    private static List<Label> CalculateLabels(List<Op> ops)
+    private static List<Label> CalculateLabels(List<Operation> ops)
     {
         var labels = new List<Label>();
         for (var i = 0; i < ops.Count; i++)
             if (ops[i].Type == OpType.Label)
                 labels.Add(new Label(ops[i].Args[0].GetRef<string>(), i, ops[i].Args[1].Get<long>()));
 
-        return labels.OrderBy(x => x.Index).ToList();
+        return [..labels.OrderBy(x => x.Index)];
     }
 }

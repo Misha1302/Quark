@@ -1,5 +1,5 @@
 using Quark.Vm.DataStructures;
-using Quark.Vm.DataStructures.VmValue;
+using Quark.Vm.DataStructures.VmValues;
 
 namespace Quark.Vm.Execution;
 
@@ -21,7 +21,7 @@ public class Engine
     private void InitMainInterpreter(VmModule module)
     {
         var item = new Interpreter();
-        item.Frames.Push(new VmFrame(module["Main"]));
+        item.Frames.Push(new VmFuncFrame(module["Main"]));
         _engineRuntimeData.Interpreters.Add(item);
     }
 

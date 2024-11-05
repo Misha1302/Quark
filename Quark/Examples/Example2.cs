@@ -1,5 +1,5 @@
 using Quark.Vm.DataStructures;
-using Quark.Vm.DataStructures.VmValue;
+using Quark.Vm.DataStructures.VmValues;
 using Quark.Vm.Execution;
 using Quark.Vm.Operations;
 
@@ -7,43 +7,46 @@ namespace Quark.Examples;
 
 public class Example2
 {
+    /// <summary>
+    ///     Runs bytecode that prints numbers from 1 to 10 separated by space
+    /// </summary>
     public void Execute()
     {
-        var i = VmValue.New(0, NativeI64);
-        var endLabel = VmValue.New(0, NativeI64);
-        var startLabel = VmValue.New(1, NativeI64);
+        var i = VmValue.Create(0, NativeI64);
+        var endLabel = VmValue.Create(0, NativeI64);
+        var startLabel = VmValue.Create(1, NativeI64);
 
-        var forLoop = (List<Op>)
+        var forLoop = (List<Operation>)
         [
-            new Op(OpType.PushConst, [VmValue.New(0.0, Number)]),
-            new Op(OpType.SetLocal, [i]),
+            new Operation(OpType.PushConst, [VmValue.Create(0.0, Number)]),
+            new Operation(OpType.SetLocal, [i]),
 
-            new Op(OpType.Label, [VmValue.NewRef("start", Str), startLabel]),
+            new Operation(OpType.Label, [VmValue.CreateRef("start", Str), startLabel]),
 
-            new Op(OpType.LoadLocal, [i]),
-            new Op(OpType.PushConst, [VmValue.New(10.0, Number)]),
-            new Op(OpType.MathOrLogicOp, [MathLogicOps.Eq]),
-            new Op(OpType.BrOp, [BranchModes.IfTrue, endLabel]),
+            new Operation(OpType.LoadLocal, [i]),
+            new Operation(OpType.PushConst, [VmValue.Create(10.0, Number)]),
+            new Operation(OpType.MathOrLogicOp, [MathLogicOps.Eq]),
+            new Operation(OpType.BrOp, [BranchModes.IfTrue, endLabel]),
 
-            new Op(OpType.LoadLocal, [i]),
-            new Op(OpType.PushConst, [VmValue.New(1.0, Number)]),
-            new Op(OpType.MathOrLogicOp, [MathLogicOps.Sum]),
-            new Op(OpType.SetLocal, [i]),
+            new Operation(OpType.LoadLocal, [i]),
+            new Operation(OpType.PushConst, [VmValue.Create(1.0, Number)]),
+            new Operation(OpType.MathOrLogicOp, [MathLogicOps.Sum]),
+            new Operation(OpType.SetLocal, [i]),
 
-            new Op(OpType.LoadLocal, [i]),
-            new Op(OpType.CallSharp, [..SharpCall.New(BuiltInFunctions.Print)]),
+            new Operation(OpType.LoadLocal, [i]),
+            new Operation(OpType.CallSharp, [..SharpCall.MakeCallSharpOperationArguments(BuiltInFunctions.Print)]),
 
-            new Op(OpType.PushConst, [VmValue.NewRef(" ", Str)]),
-            new Op(OpType.CallSharp, [..SharpCall.New(BuiltInFunctions.Print)]),
+            new Operation(OpType.PushConst, [VmValue.CreateRef(" ", Str)]),
+            new Operation(OpType.CallSharp, [..SharpCall.MakeCallSharpOperationArguments(BuiltInFunctions.Print)]),
 
-            new Op(OpType.BrOp, [BranchModes.Basic, startLabel]),
+            new Operation(OpType.BrOp, [BranchModes.Basic, startLabel]),
 
-            new Op(OpType.Label, [VmValue.NewRef("end", Str), endLabel]),
+            new Operation(OpType.Label, [VmValue.CreateRef("end", Str), endLabel]),
 
-            new Op(OpType.PushConst, [VmValue.NewRef("\n", Str)]),
-            new Op(OpType.CallSharp, [..SharpCall.New(BuiltInFunctions.Print)]),
-            new Op(OpType.PushConst, [VmValue.NilValue]),
-            new Op(OpType.Ret, []),
+            new Operation(OpType.PushConst, [VmValue.CreateRef("\n", Str)]),
+            new Operation(OpType.CallSharp, [..SharpCall.MakeCallSharpOperationArguments(BuiltInFunctions.Print)]),
+            new Operation(OpType.PushConst, [VmValue.NilValue]),
+            new Operation(OpType.Ret, []),
         ];
 
         var module = new VmModule([new VmFunction(forLoop, "Main", [new VmVariable("i", Number)])]);

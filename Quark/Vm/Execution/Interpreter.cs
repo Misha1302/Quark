@@ -1,5 +1,5 @@
 using Quark.Vm.DataStructures;
-using Quark.Vm.DataStructures.VmValue;
+using Quark.Vm.DataStructures.VmValues;
 using Quark.Vm.Operations;
 using static Quark.Vm.Execution.MathLogicOp;
 
@@ -7,9 +7,23 @@ namespace Quark.Vm.Execution;
 
 public class Interpreter
 {
-    public readonly Stack<VmFrame> Frames = new();
+    public readonly Stack<VmFuncFrame> Frames = new();
     public readonly MyStack<VmValue> Stack = new();
+
+    private double _numbersCompareAccuracy = 0.00001;
+
     public bool Halted => Frames.Count == 0;
+
+    public double NumbersCompareAccuracy
+    {
+        get => _numbersCompareAccuracy;
+        set
+        {
+            if (value <= 0.0)
+                Throw.InvalidOpEx();
+            _numbersCompareAccuracy = value;
+        }
+    }
 
     public void Step(int stepsCount)
     {
@@ -23,48 +37,43 @@ public class Interpreter
         }
     }
 
-    private void ExecuteOp(Op op)
+    private void ExecuteOp(Operation operation)
     {
-        if (op.Type == OpType.PushConst) Stack.Push(op.Args[0]);
-        else if (op.Type == OpType.MathOrLogicOp) DoMathOrLogic(op.Args[0].Get<MathLogicOp>());
-        else if (op.Type == OpType.Ret) Frames.Pop();
-        else if (op.Type == OpType.CallSharp)
-            CallSharp(op.Args[0].Get<nint>(), op.Args[1].Get<long>(), op.Args[2].IsTrue());
-        else if (op.Type == OpType.SetLocal) Frames.Peek().Variables[(int)op.Args[0].Get<long>()].Value = Stack.Pop();
-        else if (op.Type == OpType.LoadLocal) Stack.Push(Frames.Peek().Variables[(int)op.Args[0].Get<long>()].Value);
-        else if (op.Type == OpType.BrOp) DoBranch(op.Args[0].Get<BranchMode>(), op.Args[1].Get<long>());
-        else if (op.Type == OpType.Label) DoNothing();
-        else if (op.Type == OpType.Drop) Stack.Pop();
+        if (operation.Type == OpType.PushConst) Stack.Push(operation.Args[0]);
+        else if (operation.Type == OpType.MathOrLogicOp) DoMathOrLogic(operation.Args[0].Get<MathLogicOp>());
+        else if (operation.Type == OpType.Ret) Frames.Pop();
+        else if (operation.Type == OpType.CallSharp) CallSharpFunction(operation);
+        else if (operation.Type == OpType.SetLocal) SetLocal(operation);
+        else if (operation.Type == OpType.LoadLocal) LoadLocal(operation);
+        else if (operation.Type == OpType.BrOp) BrOp(operation);
+        else if (operation.Type == OpType.Label) DoNothing();
+        else if (operation.Type == OpType.Drop) Stack.Pop();
         else Throw.InvalidOpEx();
     }
 
-    private unsafe void CallSharp(nint ptr, long argsCount, bool returnsValue)
+    private void BrOp(Operation operation)
     {
-        if (!returnsValue)
-        {
-            if (argsCount == 0)
-                ((delegate*<void>)ptr)();
-            else if (argsCount == 1)
-                ((delegate*<VmValue, void>)ptr)(Stack.Get(^1));
-            else if (argsCount == 2)
-                ((delegate*<VmValue, VmValue, void>)ptr)(Stack.Get(^1), Stack.Get(^2));
-            else if (argsCount == 3)
-                ((delegate*<VmValue, VmValue, VmValue, void>)ptr)(Stack.Get(^1), Stack.Get(^2), Stack.Get(^3));
-            else Throw.InvalidOpEx();
-        }
-        else
-        {
-            var result = argsCount switch
-            {
-                0 => ((delegate*<VmValue>)ptr)(),
-                1 => ((delegate*<VmValue, VmValue>)ptr)(Stack.Get(^1)),
-                2 => ((delegate*<VmValue, VmValue, VmValue>)ptr)(Stack.Get(^1), Stack.Get(^2)),
-                3 => ((delegate*<VmValue, VmValue, VmValue, VmValue>)ptr)(Stack.Get(^1), Stack.Get(^2), Stack.Get(^3)),
-                _ => Throw.InvalidOpEx<VmValue>(),
-            };
-            Stack.Push(result);
-        }
+        DoBranch(operation.Args[0].Get<BranchMode>(), operation.Args[1].Get<long>());
+    }
 
+    private void LoadLocal(Operation operation)
+    {
+        Stack.Push(Frames.Peek().Variables[(int)operation.Args[0].Get<long>()].Value);
+    }
+
+    private void SetLocal(Operation operation)
+    {
+        Frames.Peek().Variables[(int)operation.Args[0].Get<long>()].Value = Stack.Pop();
+    }
+
+    private void CallSharpFunction(Operation operation)
+    {
+        SharpInteractioner.CallStaticSharpFunction(
+            Stack,
+            operation.Args[0].Get<nint>(),
+            operation.Args[1].Get<long>(),
+            operation.Args[2].IsTrue()
+        );
     }
 
     private void DoNothing()
@@ -109,8 +118,8 @@ public class Interpreter
             And => VmCalc.And(a, b),
             Or => VmCalc.Or(a, b),
             Xor => VmCalc.Xor(a, b),
-            Eq => VmCalc.Eq(a, b),
-            NotEq => VmCalc.NotEq(a, b),
+            Eq => VmCalc.Eq(a, b, NumbersCompareAccuracy),
+            NotEq => VmCalc.NotEq(a, b, NumbersCompareAccuracy),
             _ => Throw.InvalidOpEx<VmValue>(),
         };
 

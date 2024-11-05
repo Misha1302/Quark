@@ -1,8 +1,8 @@
-using Quark.Vm.DataStructures.VmValue;
+using Quark.Vm.DataStructures.VmValues;
 
 namespace Quark.Vm.Operations;
 
-public readonly struct Op(OpType type, List<VmValue> args)
+public readonly struct Operation(OpType type, List<VmValue> args)
 {
     public readonly OpType Type = type;
     public readonly List<VmValue> Args = args;

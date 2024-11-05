@@ -1,4 +1,4 @@
-using Quark.Vm.DataStructures.VmValue;
+using Quark.Vm.DataStructures.VmValues;
 
 namespace Quark;
 

@@ -1,14 +1,14 @@
-using Quark.Vm.DataStructures.VmValue;
+using Quark.Vm.DataStructures.VmValues;
 
 namespace Quark.Vm.DataStructures;
 
 public class VmVariable(string name, VmValueType varType)
 {
-    public readonly string Name = name;
-    public readonly VmValueType VarType = varType;
-    private VmValue.VmValue _value;
+    private VmValue _value;
+    public string Name { get; } = name;
+    public VmValueType VarType { get; } = varType;
 
-    public VmValue.VmValue Value
+    public VmValue Value
     {
         get => _value;
         set
@@ -18,5 +18,5 @@ public class VmVariable(string name, VmValueType varType)
         }
     }
 
-    public override string ToString() => $"{Name}: {Value} ({VarType})";
+    public override string ToString() => this.ToStringExtension();
 }
