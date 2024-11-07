@@ -26,4 +26,6 @@ public class MyStack<T>
         // TODO: optimize
         for (var i = 0; i < argsCount; i++) Pop();
     }
+
+    public override string ToString() => string.Join(", ", _list);
 }

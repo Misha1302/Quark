@@ -1,5 +1,6 @@
 using Quark.Vm.DataStructures;
 using Quark.Vm.DataStructures.VmValues;
+using Quark.Vm.Operations;
 
 namespace Quark.Vm.Execution;
 
@@ -7,11 +8,12 @@ public class Engine
 {
     private EngineRuntimeData _engineRuntimeData = null!;
 
-    public List<VmValue> Run(VmModule module)
+    public List<VmValue> Run(VmModule module,
+        Action<Operation, int, VmFuncFrame, MyStack<VmValue>>? logIntoConsole = null)
     {
         var output = new List<VmValue>();
 
-        InitRuntimeData(module);
+        InitRuntimeData(module, logIntoConsole);
         InitMainInterpreter(module);
         ExecuteEveryInterpreter(output);
 
@@ -25,10 +27,9 @@ public class Engine
         _engineRuntimeData.Interpreters.Add(item);
     }
 
-    private void InitRuntimeData(VmModule module)
+    private void InitRuntimeData(VmModule module, Action<Operation, int, VmFuncFrame, MyStack<VmValue>>? logIntoConsole)
     {
-        _engineRuntimeData = new EngineRuntimeData(module);
-        _engineRuntimeData.Interpreters.Clear();
+        _engineRuntimeData = new EngineRuntimeData(module, logIntoConsole, []);
     }
 
     private void ExecuteEveryInterpreter(List<VmValue> output)
@@ -36,7 +37,7 @@ public class Engine
         while (_engineRuntimeData.Interpreters.Count > 0)
         {
             foreach (var interpreter in _engineRuntimeData.Interpreters)
-                interpreter.Step(1000);
+                interpreter.Step(1000, _engineRuntimeData);
 
             RemoveHaltedInterpreters(output);
         }

@@ -3,7 +3,7 @@ using Quark.Vm.DataStructures.VmValues;
 using Quark.Vm.Execution;
 using Quark.Vm.Operations;
 
-namespace Quark.Examples;
+namespace Quark.Vm.Examples;
 
 public class Example2
 {

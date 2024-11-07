@@ -9,6 +9,7 @@ public class Interpreter
 {
     public readonly Stack<VmFuncFrame> Frames = new();
     public readonly MyStack<VmValue> Stack = new();
+    private EngineRuntimeData _engineRuntimeData = null!;
 
     private double _numbersCompareAccuracy = 0.00001;
 
@@ -25,14 +26,15 @@ public class Interpreter
         }
     }
 
-    public void Step(int stepsCount)
+    public void Step(int stepsCount, EngineRuntimeData engineRuntimeData)
     {
+        _engineRuntimeData = engineRuntimeData;
         for (var i = 0; i < stepsCount && Frames.Count != 0; i++)
         {
             var func = Frames.Peek();
             var op = func.Ops[func.Ip];
-            // Console.WriteLine($"Step {i + 1}: {op}, {func.Ip}");
             ExecuteOp(op);
+            _engineRuntimeData.LogAction?.Invoke(op, i, func, Stack);
             func.Ip++;
         }
     }
@@ -43,12 +45,18 @@ public class Interpreter
         else if (operation.Type == OpType.MathOrLogicOp) DoMathOrLogic(operation.Args[0].Get<MathLogicOp>());
         else if (operation.Type == OpType.Ret) Frames.Pop();
         else if (operation.Type == OpType.CallSharp) CallSharpFunction(operation);
+        else if (operation.Type == OpType.CallFunc) CallFunction(operation);
         else if (operation.Type == OpType.SetLocal) SetLocal(operation);
         else if (operation.Type == OpType.LoadLocal) LoadLocal(operation);
         else if (operation.Type == OpType.BrOp) BrOp(operation);
         else if (operation.Type == OpType.Label) DoNothing();
         else if (operation.Type == OpType.Drop) Stack.Pop();
         else Throw.InvalidOpEx();
+    }
+
+    private void CallFunction(Operation operation)
+    {
+        Frames.Push(new VmFuncFrame(_engineRuntimeData.Module.Functions[(int)operation.Args[0].Get<long>()]));
     }
 
     private void BrOp(Operation operation)
